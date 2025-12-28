@@ -1,4 +1,5 @@
 
-export const events = {
-  InputFormSubmitted: 'ggInputFormSubmitted'
+export const Events = {
+  InputFormSubmitted: 'ggInputFormSubmitted',
+  BackToForm: 'ggBackToForm',
 }
