@@ -8,14 +8,17 @@ import { States } from './model/stateMachine.ts';
 
 
 function App() {
-  const [stateMachine, setStateMachine] = useState(States.Input)
+  const [stateMachine, setStateMachine] = useState(States.Initial)
 
   useEffect(() => {
+    document.addEventListener(Events.VideoAdded, () => {
+      setStateMachine(States.HasVideo);
+    })
     document.addEventListener(Events.InputFormSubmitted, () => {
       setStateMachine(States.Output);
     })
     document.addEventListener(Events.BackToForm, () => {
-      setStateMachine(States.Input);
+      setStateMachine(States.Initial);
     })
   }, [])
 
@@ -25,8 +28,8 @@ function App() {
         <Logo /> 
         <div id="headline-text">Glass to Glass</div>
       </header>
-      {stateMachine === States.Input ? (
-        <InputForm />
+      {stateMachine !== States.Output ? (
+        <InputForm stateMachine={stateMachine} />
       ) : (
         <Report />
       )}

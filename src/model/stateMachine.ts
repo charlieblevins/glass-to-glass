@@ -1,4 +1,5 @@
 export const States = {
-    Input: 1,
-    Output: 2,
+    Initial: 1,
+    HasVideo: 2,
+    Output: 3,
 }
