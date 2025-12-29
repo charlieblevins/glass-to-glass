@@ -1,10 +1,11 @@
 import { Events } from "./model/events";
 import { States } from "./model/stateMachine";
 import BoundBoxFields from "./components/boundBoxFields";
-import { useState } from "react";
+import { useRef } from "react";
+import BoundBoxEditor from "./components/boundBoxEditor";
 
 function InputForm({ stateMachine }: { stateMachine: number }) {
-  const [boxEditorOpen, setBoxEditorOpen] = useState(false);
+  const dialog = useRef<HTMLDialogElement>(null)
 
   const computeLatency = () => {
     document.dispatchEvent(new CustomEvent(Events.InputFormSubmitted));
@@ -26,7 +27,7 @@ function InputForm({ stateMachine }: { stateMachine: number }) {
         <div className="label">Capture Clock Position</div>
         <button
           disabled={stateMachine === States.Initial}
-          onClick={() => setBoxEditorOpen(true)}
+          onClick={() => dialog.current?.showModal()}
         >
           Edit
         </button>
@@ -35,7 +36,7 @@ function InputForm({ stateMachine }: { stateMachine: number }) {
         <div className="label">Reference Clock Position</div>
         <button
           disabled={stateMachine === States.Initial}
-          onClick={() => setBoxEditorOpen(true)}
+          onClick={() => dialog.current?.showModal()}
         >
           Edit
         </button>
@@ -43,9 +44,9 @@ function InputForm({ stateMachine }: { stateMachine: number }) {
       <button type="submit" onClick={computeLatency} disabled={true}>
         Compute Latency
       </button>
-      <dialog open={boxEditorOpen}>
-        <BoundBoxFields title="Display Clock Position (px)" prefix="cpp" />
-        <button onClick={() => setBoxEditorOpen(false)}>Close</button>
+      <dialog ref={dialog}>
+        <BoundBoxEditor />
+        <button onClick={() => dialog.current?.close()}>Close</button>
       </dialog>
     </form>
   );
