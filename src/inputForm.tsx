@@ -1,22 +1,44 @@
 import { Events } from "./model/events";
 import { States } from "./model/stateMachine";
-import BoundBoxFields from "./components/boundBoxFields";
-import { useRef } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import BoundBoxEditor from "./components/boundBoxEditor";
+import AnalyzerBuilder from "./analyzer/builder";
+import { dispatch } from "./event";
+import FormError from "./components/formError";
+import { FormErrors, type FormErrorEnum } from "./model/formErrors";
 
 function InputForm({ stateMachine }: { stateMachine: number }) {
-  const dialog = useRef<HTMLDialogElement>(null)
+  const dialog = useRef<HTMLDialogElement>(null);
+  const builder = useRef<AnalyzerBuilder>(new AnalyzerBuilder());
 
-  const computeLatency = () => {
-    document.dispatchEvent(new CustomEvent(Events.InputFormSubmitted));
+  const [formError, setFormError] = useState<FormErrorEnum | null>();
+
+  // file added
+  const onVideoInputChange = (e: ChangeEvent) => {
+    if (!(e.target instanceof HTMLInputElement)) {
+      throw new Error("unexpected input type");
+    }
+
+    const { files } = e.target;
+
+    if (!files || !files.length) {
+      setFormError(FormErrors.NoScreenRecording);
+      return;
+    }
+
+    dispatch(Events.VideoAdded);
   };
 
-  const onVideoInputChange = () => {
-    document.dispatchEvent(new CustomEvent(Events.VideoAdded));
+  // Run analysis
+  const computeLatency = () => {
+    const [analyzer, err] = builder.current.build();
+
+    dispatch(Events.InputFormSubmitted);
   };
 
   return (
     <form id="input-form">
+      {formError ? <FormError errorEnum={formError} /> : null}
       <div id="video-input" className="input-group">
         <label className="required-label">Screen Recording</label>
         <div>
