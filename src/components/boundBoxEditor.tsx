@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import BoundBoxFields from "./boundBoxFields";
 import { Stage, Layer, Image, Rect, Transformer } from "react-konva";
-import useImage from "use-image";
 
 const stageSize = {
   width: 300,
@@ -15,19 +14,16 @@ const shape = {
 };
 
 // To be played within a modal
-function BoundBoxEditor() {
+function BoundBoxEditor({ canvas }: { canvas: HTMLCanvasElement }) {
   const transformerRef = useRef(null);
-//   const img = useImage()
 
   return (
     <>
       <BoundBoxFields title="Display Clock Position (px)" prefix="cpp" />
       <Stage width={stageSize.width} height={stageSize.height}>
-        {/* <Layer>
-            <Image
-            image={}
-            />
-        </Layer> */}
+        <Layer>
+          <Image image={canvas} />
+        </Layer>
         <Layer>
           <Rect
             x={shape.x}

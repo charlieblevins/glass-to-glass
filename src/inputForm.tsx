@@ -6,15 +6,17 @@ import AnalyzerBuilder from "./analyzer/builder";
 import { dispatch } from "./event";
 import FormError from "./components/formError";
 import { FormErrors, type FormErrorEnum } from "./model/formErrors";
+import ScreenRecording from "./analyzer/screen-recording";
 
 function InputForm({ stateMachine }: { stateMachine: number }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const builder = useRef<AnalyzerBuilder>(new AnalyzerBuilder());
+  const [firstFrameCanvas, setFirstFrameCanvas] = useState<HTMLCanvasElement>();
 
   const [formError, setFormError] = useState<FormErrorEnum | null>();
 
   // file added
-  const onVideoInputChange = (e: ChangeEvent) => {
+  const onVideoInputChange = async (e: ChangeEvent) => {
     if (!(e.target instanceof HTMLInputElement)) {
       throw new Error("unexpected input type");
     }
@@ -25,6 +27,15 @@ function InputForm({ stateMachine }: { stateMachine: number }) {
       setFormError(FormErrors.NoScreenRecording);
       return;
     }
+
+    const sr = new ScreenRecording(files[0]);
+
+    const [canvas, err] = await sr.firstFrameCanvas();
+    if (err !== null || canvas === null) {
+      setFormError(FormErrors.InvalidFile);
+      return;
+    }
+    setFirstFrameCanvas(canvas);
 
     dispatch(Events.VideoAdded);
   };
@@ -67,7 +78,7 @@ function InputForm({ stateMachine }: { stateMachine: number }) {
         Compute Latency
       </button>
       <dialog ref={dialog}>
-        <BoundBoxEditor />
+        <BoundBoxEditor canvas={canvas} />
         <button onClick={() => dialog.current?.close()}>Close</button>
       </dialog>
     </form>
