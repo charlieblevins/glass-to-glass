@@ -1,6 +1,6 @@
-import { Events } from "./model/events";
+import { Events, type BoundBoxChangePayload } from "./model/events";
 import { States } from "./model/stateMachine";
-import { useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import BoundBoxEditor from "./components/boundBoxEditor";
 import AnalyzerBuilder from "./analyzer/builder";
 import { dispatch } from "./event";
@@ -8,9 +8,17 @@ import FormError from "./components/formError";
 import { FormErrors, type FormErrorEnum } from "./model/formErrors";
 import ScreenRecording from "./analyzer/screen-recording";
 
+const BoundBoxes = {
+  Capture: 1,
+  Viewer: 2,
+};
+
 function InputForm({ stateMachine }: { stateMachine: number }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const builder = useRef<AnalyzerBuilder>(new AnalyzerBuilder());
+
+  const currentBox = useRef<number>(BoundBoxes.Capture);
+
   const [firstFrameCanvas, setFirstFrameCanvas] = useState<HTMLCanvasElement>();
 
   const [formError, setFormError] = useState<FormErrorEnum | null>();
@@ -35,10 +43,25 @@ function InputForm({ stateMachine }: { stateMachine: number }) {
       setFormError(FormErrors.InvalidFile);
       return;
     }
+
+    builder.current.addScreenRecording(sr);
+
     setFirstFrameCanvas(canvas);
 
     dispatch(Events.VideoAdded);
   };
+
+  useEffect(() => {
+    document.addEventListener(Events.BoundBoxChange, (e) => {
+      const payload = (e as CustomEvent).detail as BoundBoxChangePayload;
+
+      if (currentBox.current === BoundBoxes.Capture) {
+        builder.current.setCaptureBox(payload);
+      } else {
+        builder.current.setViewerBox(payload);
+      }
+    });
+  });
 
   // Run analysis
   const computeLatency = () => {
@@ -59,8 +82,12 @@ function InputForm({ stateMachine }: { stateMachine: number }) {
       <div id="capture-clock-box-input" className="input-group">
         <div className="label">Capture Clock Position</div>
         <button
+          type="button"
           disabled={stateMachine === States.Initial}
-          onClick={() => dialog.current?.showModal()}
+          onClick={() => {
+            currentBox.current = BoundBoxes.Capture;
+            dialog.current?.showModal();
+          }}
         >
           Edit
         </button>
@@ -68,8 +95,12 @@ function InputForm({ stateMachine }: { stateMachine: number }) {
       <div id="reference-clock-box-input" className="input-group">
         <div className="label">Reference Clock Position</div>
         <button
+          type="button"
           disabled={stateMachine === States.Initial}
-          onClick={() => dialog.current?.showModal()}
+          onClick={() => {
+            currentBox.current = BoundBoxes.Viewer;
+            dialog.current?.showModal();
+          }}
         >
           Edit
         </button>
@@ -77,10 +108,14 @@ function InputForm({ stateMachine }: { stateMachine: number }) {
       <button type="submit" onClick={computeLatency} disabled={true}>
         Compute Latency
       </button>
-      <dialog ref={dialog}>
-        <BoundBoxEditor canvas={canvas} />
-        <button onClick={() => dialog.current?.close()}>Close</button>
-      </dialog>
+      {firstFrameCanvas ? (
+        <dialog ref={dialog}>
+          <BoundBoxEditor parent={dialog} canvas={firstFrameCanvas} />
+          <button type="button" onClick={() => dialog.current?.close()}>
+            Close
+          </button>
+        </dialog>
+      ) : null}
     </form>
   );
 }
