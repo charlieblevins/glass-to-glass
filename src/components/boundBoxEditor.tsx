@@ -32,7 +32,7 @@ function BoundBoxEditor({ canvas }: { canvas: HTMLCanvasElement }) {
   // 1. distortion of the shape
   // 2. incorrect size values after transformation
 
-  const scale = APP_WIDTH_PX / canvas.width;
+  const scale = 800 / canvas.width;
 
   // This effect attaches the transformer to the rectangle
   useEffect(() => {
@@ -47,12 +47,13 @@ function BoundBoxEditor({ canvas }: { canvas: HTMLCanvasElement }) {
     <>
       <BoundBoxFields title="Display Clock Position (px)" prefix="cpp" />
       <Stage
+        className="test"
         scale={{
           x: scale,
           y: scale,
         }}
-        width={canvas.width}
-        height={canvas.height}
+        width={800}
+        height={(800 / canvas.width) * canvas.height}
       >
         <Layer>
           <Image image={canvas} />
@@ -63,7 +64,7 @@ function BoundBoxEditor({ canvas }: { canvas: HTMLCanvasElement }) {
             {...translatedProps}
             fill="transparent"
             stroke="red"
-            strokeWidth={2}
+            strokeWidth={10}
             draggable
             onDragEnd={(e) => {
               const payload: BoundBoxChangePayload = {

@@ -44,67 +44,69 @@ function BoundBoxFields({ title, prefix }: { title: string; prefix: string }) {
   };
 
   return (
-    <fieldset>
+    <fieldset id="bound-box-fields">
       <legend>{title}</legend>
-      <div>
-        <label htmlFor={xName}>X:</label>
-        <input
-          type="number"
-          id={xName}
-          name={xName}
-          value={x}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => {
-            const newX = parseInt(e.target.value, 10);
-            dispatchChange("x", newX);
-            setX(newX);
-          }}
-          required
-        />
-      </div>
-      <div>
-        <label htmlFor={yName}>Y:</label>
-        <input
-          type="number"
-          id={yName}
-          name={yName}
-          value={y}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => {
-            const newY = parseInt(e.target.value, 10);
-            dispatchChange("y", newY);
-            setY(newY);
-          }}
-          required
-        />
-      </div>
-      <div>
-        <label htmlFor={widthName}>Width:</label>
-        <input
-          type="number"
-          id={widthName}
-          name={widthName}
-          value={width}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => {
-            const newWidth = parseInt(e.target.value, 10);
-            dispatchChange("width", newWidth);
-            setWidth(newWidth);
-          }}
-          required
-        />
-      </div>
-      <div>
-        <label htmlFor={heightName}>Height:</label>
-        <input
-          type="number"
-          id={heightName}
-          name={heightName}
-          value={height}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => {
-            const newHeight = parseInt(e.target.value, 10);
-            dispatchChange("height", newHeight);
-            setHeight(newHeight);
-          }}
-          required
-        />
+      <div id="bound-box-fields-inner">
+        <div className="single-field">
+          <label htmlFor={xName}>X:</label>
+          <input
+            type="number"
+            id={xName}
+            name={xName}
+            value={x}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              const newX = parseInt(e.target.value, 10);
+              dispatchChange("x", newX);
+              setX(newX);
+            }}
+            required
+          />
+        </div>
+        <div className="single-field">
+          <label htmlFor={yName}>Y:</label>
+          <input
+            type="number"
+            id={yName}
+            name={yName}
+            value={y}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              const newY = parseInt(e.target.value, 10);
+              dispatchChange("y", newY);
+              setY(newY);
+            }}
+            required
+          />
+        </div>
+        <div className="single-field">
+          <label htmlFor={widthName}>Width:</label>
+          <input
+            type="number"
+            id={widthName}
+            name={widthName}
+            value={width}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              const newWidth = parseInt(e.target.value, 10);
+              dispatchChange("width", newWidth);
+              setWidth(newWidth);
+            }}
+            required
+          />
+        </div>
+        <div className="single-field">
+          <label htmlFor={heightName}>Height:</label>
+          <input
+            type="number"
+            id={heightName}
+            name={heightName}
+            value={height}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              const newHeight = parseInt(e.target.value, 10);
+              dispatchChange("height", newHeight);
+              setHeight(newHeight);
+            }}
+            required
+          />
+        </div>
       </div>
     </fieldset>
   );

@@ -1,9 +1,12 @@
-html, body {
+html,
+body {
   height: 100%;
 }
+
 * {
   box-sizing: border-box;
 }
+
 #root {
   /* Why?
     The bounding box editor is canvas-based, and therefore
@@ -22,8 +25,10 @@ html, body {
 header {
   display: flex;
   width: 100%;
-  flex-direction: row;;
-  align-items: center;;
+  flex-direction: row;
+  ;
+  align-items: center;
+  ;
   justify-content: left;
 }
 
@@ -33,9 +38,11 @@ header {
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -44,6 +51,7 @@ header {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -54,27 +62,35 @@ header {
     animation: logo-spin infinite 20s linear;
   }
 }
+
 .required-label::after {
-  content: " *"; /* Adds a space and an asterisk after the label text */
-  color: red;   /* Styles the asterisk in red */
-  font-weight: bold; /* Makes it bold */
+  content: " *";
+  /* Adds a space and an asterisk after the label text */
+  color: red;
+  /* Styles the asterisk in red */
+  font-weight: bold;
+  /* Makes it bold */
 }
+
 label {
   margin: 0 0.25rem 0.75rem;
 }
 
 .input-group {
   display: flex;
-  border: 3px solid #ced4da; /* Add the desired border */
-  border-radius: 0.25rem; /* Optional: adds rounded corners */
+  border: 3px solid #ced4da;
+  /* Add the desired border */
+  border-radius: 0.25rem;
+  /* Optional: adds rounded corners */
   /* Ensures the border surrounds the content neatly */
-  width: fit-content; 
+  width: fit-content;
   padding: 2rem;
   margin: 1rem;
   flex-direction: column;
   align-items: left;
   justify-content: left;
 }
+
 .input-group.disabled {
   border-color: gray;
 }
@@ -87,7 +103,7 @@ input[type="file"]::file-selector-button {
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  
+
   /* Additional effects */
   margin-right: 15px;
   transition: background-color 0.2s ease-in-out;
@@ -104,13 +120,36 @@ input[type="file"]::file-selector-button:focus {
 }
 
 dialog {
-  width: 80%;
+  display: flex;
+  flex-direction: column;
+  /* 800px desired width, +20 +20 to account for padding */
+  width: 840px;
   border: none;
   border-radius: 8px;
   padding: 20px;
 }
 
 ::backdrop {
-  background-color: rgba(0, 0, 0, 0.7); /* Darkened background */
-  backdrop-filter: blur(5px); /* Optional blur */
+  background-color: rgba(0, 0, 0, 0.7);
+  /* Darkened background */
+  backdrop-filter: blur(5px);
+  /* Optional blur */
+}
+
+#bound-box-fields .single-field {
+  align-items: center;
+  display: flex;
+}
+
+#bound-box-fields-inner {
+  display: flex;
+  justify-content: space-between;
+}
+
+#bound-box-fields .single-field label {
+  margin: 0 0.5rem 0 0;
+}
+
+#bound-box-fields .single-field input {
+  width: 5rem;
 }

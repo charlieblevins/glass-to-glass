@@ -110,7 +110,7 @@ function InputForm({ stateMachine }: { stateMachine: number }) {
       </button>
       {firstFrameCanvas ? (
         <dialog ref={dialog}>
-          <BoundBoxEditor parent={dialog} canvas={firstFrameCanvas} />
+          <BoundBoxEditor canvas={firstFrameCanvas} />
           <button type="button" onClick={() => dialog.current?.close()}>
             Close
           </button>
