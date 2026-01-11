@@ -1,9 +1,8 @@
 import { Events, type BoundBoxChangePayload } from "./model/events";
-import { States } from "./model/stateMachine";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import BoundBoxEditor from "./components/boundBoxEditor";
 import AnalyzerBuilder from "./analyzer/builder";
-import { dispatch } from "./event";
 import FormError from "./components/formError";
 import { FormErrors, type FormErrorEnum } from "./model/formErrors";
 import ScreenRecording from "./analyzer/screen-recording";
@@ -13,13 +12,15 @@ const BoundBoxes = {
   Viewer: 2,
 };
 
-function InputForm({ stateMachine }: { stateMachine: number }) {
+function InputForm() {
   const dialog = useRef<HTMLDialogElement>(null);
   const builder = useRef<AnalyzerBuilder>(new AnalyzerBuilder());
+  const navigate = useNavigate();
 
   const currentBox = useRef<number>(BoundBoxes.Capture);
 
   const [firstFrameCanvas, setFirstFrameCanvas] = useState<HTMLCanvasElement>();
+  const [videoAdded, setVideoAdded] = useState(false);
 
   const [formError, setFormError] = useState<FormErrorEnum | null>();
 
@@ -47,12 +48,11 @@ function InputForm({ stateMachine }: { stateMachine: number }) {
     builder.current.addScreenRecording(sr);
 
     setFirstFrameCanvas(canvas);
-
-    dispatch(Events.VideoAdded);
+    setVideoAdded(true);
   };
 
   useEffect(() => {
-    document.addEventListener(Events.BoundBoxChange, (e) => {
+    const onBoundBoxChange = (e: Event) => {
       const payload = (e as CustomEvent).detail as BoundBoxChangePayload;
 
       if (currentBox.current === BoundBoxes.Capture) {
@@ -60,14 +60,23 @@ function InputForm({ stateMachine }: { stateMachine: number }) {
       } else {
         builder.current.setViewerBox(payload);
       }
-    });
-  });
+    };
+    document.addEventListener(Events.BoundBoxChange, onBoundBoxChange);
+    return () => {
+      document.removeEventListener(Events.BoundBoxChange, onBoundBoxChange);
+    }
+  }, []);
 
   // Run analysis
   const computeLatency = () => {
     const [analyzer, err] = builder.current.build();
 
-    dispatch(Events.InputFormSubmitted);
+    if (err || !analyzer) {
+        // TODO: handle error
+        return;
+    }
+    // TODO: do something with analyzer
+    navigate('/report')
   };
 
   return (
@@ -83,7 +92,7 @@ function InputForm({ stateMachine }: { stateMachine: number }) {
         <div className="label">Capture Clock Position</div>
         <button
           type="button"
-          disabled={stateMachine === States.Initial}
+          disabled={!videoAdded}
           onClick={() => {
             currentBox.current = BoundBoxes.Capture;
             dialog.current?.showModal();
@@ -96,7 +105,7 @@ function InputForm({ stateMachine }: { stateMachine: number }) {
         <div className="label">Reference Clock Position</div>
         <button
           type="button"
-          disabled={stateMachine === States.Initial}
+          disabled={!videoAdded}
           onClick={() => {
             currentBox.current = BoundBoxes.Viewer;
             dialog.current?.showModal();

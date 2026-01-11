@@ -1,38 +1,22 @@
-import { useEffect, useState } from 'react'
+import { Routes, Route } from 'react-router-dom';
 import InputForm from './inputForm.tsx';
-import './App.css'
-import { Events } from './model/events.ts';
+import './App.css';
 import Logo from './components/logo.tsx';
 import Report from './report.tsx';
-import { States } from './model/stateMachine.ts';
-
+import TestVideoCreator from './pages/testVideoCreator.tsx';
 
 function App() {
-  const [stateMachine, setStateMachine] = useState(States.Initial)
-
-  useEffect(() => {
-    document.addEventListener(Events.VideoAdded, () => {
-      setStateMachine(States.HasVideo);
-    })
-    document.addEventListener(Events.InputFormSubmitted, () => {
-      setStateMachine(States.Output);
-    })
-    document.addEventListener(Events.BackToForm, () => {
-      setStateMachine(States.Initial);
-    })
-  }, [])
-
   return (
     <>
       <header>
         <Logo /> 
         <div id="headline-text">Glass to Glass</div>
       </header>
-      {stateMachine !== States.Output ? (
-        <InputForm stateMachine={stateMachine} />
-      ) : (
-        <Report />
-      )}
+      <Routes>
+        <Route path="/" element={<InputForm />} />
+        <Route path="/report" element={<Report />} />
+        <Route path="/test-video-create" element={<TestVideoCreator />} />
+      </Routes>
     </>
   )
 }
