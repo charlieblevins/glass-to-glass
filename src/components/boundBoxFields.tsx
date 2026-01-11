@@ -1,38 +1,36 @@
-import { useEffect, useState, type ChangeEvent } from "react";
-import { Events, type BoundBoxChangePayload } from "../model/events";
+import { useState, type ChangeEvent } from "react";
+import { Events } from "../model/events";
 import { dispatch } from "../event";
+import type { BoundBox } from "../model/boundBox";
 
-function BoundBoxFields({ title, prefix }: { title: string; prefix: string }) {
+function BoundBoxFields({
+  title,
+  prefix,
+  existingBox,
+}: {
+  title: string;
+  prefix: string;
+  existingBox: BoundBox | undefined;
+}) {
   const xName = prefix + "-x";
   const yName = prefix + "-y";
   const widthName = prefix + "-width";
   const heightName = prefix + "-height";
 
-  const [x, setX] = useState(0);
-  const [y, setY] = useState(0);
-  const [width, setWidth] = useState(0);
-  const [height, setHeight] = useState(0);
+  const [localX, setLocalX] = useState<number | undefined>(undefined);
+  const [localY, setLocalY] = useState<number | undefined>(undefined);
+  const [localWidth, setLocalWidth] = useState<number | undefined>(undefined);
+  const [localHeight, setLocalHeight] = useState<number | undefined>(undefined);
 
-  useEffect(() => {
-    document.addEventListener(Events.BoundBoxChange, (e: Event) => {
-      const payload = (e as CustomEvent).detail as BoundBoxChangePayload;
+  // Display value prioritizes local edits, falls back to existingBox
+  const x = localX !== undefined ? localX : (existingBox?.x ?? 0);
+  const y = localY !== undefined ? localY : (existingBox?.y ?? 0);
+  const width =
+    localWidth !== undefined ? localWidth : (existingBox?.width ?? 0);
+  const height =
+    localHeight !== undefined ? localHeight : (existingBox?.height ?? 0);
 
-      if (x !== payload.x) {
-        setX(payload.x);
-      }
-      if (y !== payload.y) {
-        setY(payload.y);
-      }
-      if (width !== payload.width) {
-        setWidth(payload.width);
-      }
-      if (height !== payload.height) {
-        setHeight(payload.height);
-      }
-    });
-  });
-
-  const dispatchChange = (key: keyof BoundBoxChangePayload, newVal: number) => {
+  const dispatchChange = (key: keyof BoundBox, newVal: number) => {
     const payload = {
       x,
       y,
@@ -57,7 +55,7 @@ function BoundBoxFields({ title, prefix }: { title: string; prefix: string }) {
             onChange={(e: ChangeEvent<HTMLInputElement>) => {
               const newX = parseInt(e.target.value, 10);
               dispatchChange("x", newX);
-              setX(newX);
+              setLocalX(newX);
             }}
             required
           />
@@ -72,7 +70,7 @@ function BoundBoxFields({ title, prefix }: { title: string; prefix: string }) {
             onChange={(e: ChangeEvent<HTMLInputElement>) => {
               const newY = parseInt(e.target.value, 10);
               dispatchChange("y", newY);
-              setY(newY);
+              setLocalY(newY);
             }}
             required
           />
@@ -87,7 +85,7 @@ function BoundBoxFields({ title, prefix }: { title: string; prefix: string }) {
             onChange={(e: ChangeEvent<HTMLInputElement>) => {
               const newWidth = parseInt(e.target.value, 10);
               dispatchChange("width", newWidth);
-              setWidth(newWidth);
+              setLocalWidth(newWidth);
             }}
             required
           />
@@ -102,7 +100,7 @@ function BoundBoxFields({ title, prefix }: { title: string; prefix: string }) {
             onChange={(e: ChangeEvent<HTMLInputElement>) => {
               const newHeight = parseInt(e.target.value, 10);
               dispatchChange("height", newHeight);
-              setHeight(newHeight);
+              setLocalHeight(newHeight);
             }}
             required
           />

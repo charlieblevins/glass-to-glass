@@ -88,7 +88,11 @@ function BoundBoxEditor({ canvas, builder, boxType }: BoundBoxEditorProps) {
           <Dialog.Title className="dialog-title">
             Set clock position
           </Dialog.Title>
-          <BoundBoxFields title="Display Clock Position (px)" prefix="cpp" />
+          <BoundBoxFields
+            title="Display Clock Position (px)"
+            prefix="cpp"
+            existingBox={translatedProps}
+          />
           <Stage
             className="test"
             scale={{
