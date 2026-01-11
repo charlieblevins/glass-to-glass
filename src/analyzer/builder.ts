@@ -31,4 +31,12 @@ export default class AnalyzerBuilder {
   setViewerBox(bb: BoundBox) {
     this.viewerBox = bb;
   }
+
+  getCaptureBox(): BoundBox | null {
+    return this.captureBox;
+  }
+
+  getViewerBox(): BoundBox | null {
+    return this.viewerBox;
+  }
 }
