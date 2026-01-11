@@ -90,7 +90,7 @@ const TestVideoCreator: React.FC = () => {
     const totalFrames = duration / frameInterval;
 
     for (let i = 0; i < totalFrames; i++) {
-      await canvasSource.add(i * frameInterval);
+      await canvasSource.add((i * frameInterval) / 1000); // Convert milliseconds to seconds
       await new Promise((resolve) => setTimeout(resolve, frameInterval));
     }
 
