@@ -80,26 +80,28 @@ function InputForm() {
           <input onChange={onVideoInputChange} type="file" required />
         </div>
       </div>
-      <div id="capture-clock-box-input" className="input-group">
-        <div className="label">Capture Clock Position</div>
-        {firstFrameCanvas ? (
-          <BoundBoxEditor
-            canvas={firstFrameCanvas}
-            builder={builder}
-            boxType={BoundBoxes.Capture}
-          />
-        ) : null}
-      </div>
-      <div id="reference-clock-box-input" className="input-group">
-        <div className="label">Viewer Clock Position</div>
-        {firstFrameCanvas ? (
-          <BoundBoxEditor
-            canvas={firstFrameCanvas}
-            builder={builder}
-            boxType={BoundBoxes.Viewer}
-          />
-        ) : null}
-      </div>
+      {firstFrameCanvas ? (
+        <div>
+          <div id="capture-clock-box-input" className="input-group">
+            <div className="label">Capture Clock Position</div>
+            <BoundBoxEditor
+              canvas={firstFrameCanvas}
+              builder={builder}
+              boxType={BoundBoxes.Capture}
+            />
+          </div>
+          <div id="reference-clock-box-input" className="input-group">
+            <div className="label">Viewer Clock Position</div>
+            <BoundBoxEditor
+              canvas={firstFrameCanvas}
+              builder={builder}
+              boxType={BoundBoxes.Viewer}
+            />
+          </div>
+        </div>
+      ) : (
+        <div>Please add a file first</div>
+      )}
       <button type="submit" onClick={computeLatency} disabled={true}>
         Compute Latency
       </button>

@@ -71,7 +71,7 @@ function BoundBoxEditor({ canvas, builder, boxType }: BoundBoxEditorProps) {
       transformerRef.current.nodes([shapeRef.current]);
       transformerRef.current.getLayer()?.batchDraw();
     }
-  }, []);
+  }, [localProps, translatedProps]);
 
   return (
     <Dialog.Root
@@ -141,13 +141,16 @@ function BoundBoxEditor({ canvas, builder, boxType }: BoundBoxEditorProps) {
                   node.scaleX(1);
                   node.scaleY(1);
 
-                  setLocalProps({
+                  const newProps: BoundBoxChangePayload = {
                     x: node.x(),
                     y: node.y(),
                     // Ensure dimensions aren't negative or too small
                     width: Math.max(5, node.width() * scaleX),
                     height: Math.max(5, node.height() * scaleY),
-                  });
+                    boxType,
+                  };
+                  setLocalProps(newProps);
+                  dispatch(Events.BoundBoxChange, newProps);
                 }}
               />
             </Layer>
