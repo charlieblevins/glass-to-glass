@@ -153,3 +153,7 @@ dialog {
 #bound-box-fields .single-field input {
   width: 5rem;
 }
+
+.test-link-container {
+  margin-top: 20px;
+}

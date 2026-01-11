@@ -1,6 +1,6 @@
 import { Events, type BoundBoxChangePayload } from "./model/events";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import BoundBoxEditor from "./components/boundBoxEditor";
 import AnalyzerBuilder from "./analyzer/builder";
 import FormError from "./components/formError";
@@ -117,6 +117,9 @@ function InputForm() {
       <button type="submit" onClick={computeLatency} disabled={true}>
         Compute Latency
       </button>
+      <div className="test-link-container">
+        <Link to="/test-video-create">Test Video Creator</Link>
+      </div>
       {firstFrameCanvas ? (
         <dialog ref={dialog}>
           <BoundBoxEditor canvas={firstFrameCanvas} />

@@ -1,6 +1,8 @@
+import { Link } from 'react-router-dom';
+
 const Logo = function () {
   return (
-    <div className="logo">
+    <Link to="/" className="logo">
       <svg
         id="sw-js-blob-svg"
         viewBox="0 0 100 100"
@@ -32,7 +34,7 @@ const Logo = function () {
           strokeWidth="0"
         ></path>{" "}
       </svg>
-    </div>
+    </Link>
   );
 };
 export default Logo;
