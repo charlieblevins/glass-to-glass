@@ -1,4 +1,4 @@
-import type { BoundBox } from "./boundBox";
+import type { BoundBox, BoundBoxes } from "./boundBox";
 
 // all events are prefixed with 'gg' (glass to glass)
 export const Events = {
@@ -8,4 +8,6 @@ export const Events = {
   BoundBoxChange: "ggBoundBoxChange",
 };
 
-export type BoundBoxChangePayload = BoundBox;
+export type BoundBoxChangePayload = BoundBox & {
+  boxType: typeof BoundBoxes[keyof typeof BoundBoxes];
+};

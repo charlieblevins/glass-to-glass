@@ -4,3 +4,8 @@ export interface BoundBox {
   width: number;
   height: number;
 }
+
+export const BoundBoxes = {
+  Capture: 1,
+  Viewer: 2,
+};

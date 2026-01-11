@@ -6,21 +6,14 @@ import AnalyzerBuilder from "./analyzer/builder";
 import FormError from "./components/formError";
 import { FormErrors, type FormErrorEnum } from "./model/formErrors";
 import ScreenRecording from "./analyzer/screen-recording";
-
-const BoundBoxes = {
-  Capture: 1,
-  Viewer: 2,
-};
+import { BoundBoxes } from "./model/boundBox";
 
 function InputForm() {
-  const dialog = useRef<HTMLDialogElement>(null);
   const builder = useRef<AnalyzerBuilder>(new AnalyzerBuilder());
   const navigate = useNavigate();
 
-  const currentBox = useRef<number>(BoundBoxes.Capture);
-
   const [firstFrameCanvas, setFirstFrameCanvas] = useState<HTMLCanvasElement>();
-  const [videoAdded, setVideoAdded] = useState(false);
+  // const [videoAdded, setVideoAdded] = useState(false);
 
   const [formError, setFormError] = useState<FormErrorEnum | null>();
 
@@ -48,14 +41,13 @@ function InputForm() {
     builder.current.addScreenRecording(sr);
 
     setFirstFrameCanvas(canvas);
-    setVideoAdded(true);
   };
 
   useEffect(() => {
     const onBoundBoxChange = (e: Event) => {
       const payload = (e as CustomEvent).detail as BoundBoxChangePayload;
 
-      if (currentBox.current === BoundBoxes.Capture) {
+      if (payload.boxType === BoundBoxes.Capture) {
         builder.current.setCaptureBox(payload);
       } else {
         builder.current.setViewerBox(payload);
@@ -64,7 +56,7 @@ function InputForm() {
     document.addEventListener(Events.BoundBoxChange, onBoundBoxChange);
     return () => {
       document.removeEventListener(Events.BoundBoxChange, onBoundBoxChange);
-    }
+    };
   }, []);
 
   // Run analysis
@@ -72,11 +64,11 @@ function InputForm() {
     const [analyzer, err] = builder.current.build();
 
     if (err || !analyzer) {
-        // TODO: handle error
-        return;
+      // TODO: handle error
+      return;
     }
     // TODO: do something with analyzer
-    navigate('/report')
+    navigate("/report");
   };
 
   return (
@@ -90,29 +82,23 @@ function InputForm() {
       </div>
       <div id="capture-clock-box-input" className="input-group">
         <div className="label">Capture Clock Position</div>
-        <button
-          type="button"
-          disabled={!videoAdded}
-          onClick={() => {
-            currentBox.current = BoundBoxes.Capture;
-            dialog.current?.showModal();
-          }}
-        >
-          Edit
-        </button>
+        {firstFrameCanvas ? (
+          <BoundBoxEditor
+            canvas={firstFrameCanvas}
+            builder={builder}
+            boxType={BoundBoxes.Capture}
+          />
+        ) : null}
       </div>
       <div id="reference-clock-box-input" className="input-group">
-        <div className="label">Reference Clock Position</div>
-        <button
-          type="button"
-          disabled={!videoAdded}
-          onClick={() => {
-            currentBox.current = BoundBoxes.Viewer;
-            dialog.current?.showModal();
-          }}
-        >
-          Edit
-        </button>
+        <div className="label">Viewer Clock Position</div>
+        {firstFrameCanvas ? (
+          <BoundBoxEditor
+            canvas={firstFrameCanvas}
+            builder={builder}
+            boxType={BoundBoxes.Viewer}
+          />
+        ) : null}
       </div>
       <button type="submit" onClick={computeLatency} disabled={true}>
         Compute Latency
@@ -120,14 +106,6 @@ function InputForm() {
       <div className="test-link-container">
         <Link to="/test-video-create">Test Video Creator</Link>
       </div>
-      {firstFrameCanvas ? (
-        <dialog ref={dialog}>
-          <BoundBoxEditor canvas={firstFrameCanvas} />
-          <button type="button" onClick={() => dialog.current?.close()}>
-            Close
-          </button>
-        </dialog>
-      ) : null}
     </form>
   );
 }

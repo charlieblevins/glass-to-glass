@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@base-ui/react": "^1.0.0",
     "classnames": "^2.5.1",
     "konva": "^10.0.12",
     "mediabunny": "1.27.2",
