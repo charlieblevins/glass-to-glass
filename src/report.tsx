@@ -1,14 +1,13 @@
 import { Events } from "./model/events";
-import { useLocation, useNavigate } from "react-router-dom";
-import Analyzer from "./analyzer/analyzer";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AnalyzerStates } from "./analyzer/analyzer";
 import type { LatencyReport } from "./analyzer/latency-report";
+import { analyzerStore } from "./analyzer/analyzerStore";
 
 function Report() {
-  const location = useLocation();
   const navigate = useNavigate();
-  const analyzer = location.state?.analyzer as Analyzer | undefined;
+  const analyzer = analyzerStore.get();
 
   const [report, setReport] = useState<LatencyReport | null>();
   const [progress, setProgress] = useState<number>(0);
@@ -19,7 +18,7 @@ function Report() {
 
   useEffect(() => {
     async function run() {
-      if (!(analyzer instanceof Analyzer)) {
+      if (!analyzer) {
         console.warn("report page had no analyzer. redirecting home.");
         navigate("/");
         return;
@@ -34,11 +33,11 @@ function Report() {
         setProgress(analyzer.progress());
       }, 500);
 
-      const r = await (analyzer as Analyzer).compute();
+      const report = await analyzer.compute();
 
       clearInterval(progressInterval);
       setProgress(1);
-      setReport(r);
+      setReport(report);
     }
 
     run();

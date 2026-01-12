@@ -7,6 +7,7 @@ import FormError from "./components/formError";
 import { FormErrors, type FormErrorEnum } from "./model/formErrors";
 import ScreenRecording from "./analyzer/screen-recording";
 import { BoundBoxes, type BoundBox } from "./model/boundBox";
+import { analyzerStore } from "./analyzer/analyzerStore";
 
 function InputForm() {
   const analyzerBuilder = useRef<AnalyzerBuilder>(new AnalyzerBuilder());
@@ -62,15 +63,62 @@ function InputForm() {
     };
   }, []);
 
+  // Load test data with predefined bounding boxes
+  const loadTestData = () => {
+    if (!firstFrameCanvas) {
+      alert("Please load a video file first");
+      return;
+    }
+
+    // Predefined test bounding boxes (adjust these values for your test video)
+    const testCaptureBox: BoundBox = {
+      x: 468,
+      y: 148,
+      width: 267,
+      height: 100,
+    };
+
+    const testViewerBox: BoundBox = {
+      x: 66,
+      y: 146,
+      width: 277,
+      height: 100,
+    };
+
+    // Set the boxes in the builder and state
+    analyzerBuilder.current.setCaptureBox(testCaptureBox);
+    setCaptureBox(testCaptureBox);
+
+    analyzerBuilder.current.setViewerBox(testViewerBox);
+    setViewerBox(testViewerBox);
+
+    // Dispatch events so the BoundBoxEditor components update
+    document.dispatchEvent(
+      new CustomEvent(Events.BoundBoxChange, {
+        detail: { ...testCaptureBox, boxType: BoundBoxes.Capture },
+      })
+    );
+    document.dispatchEvent(
+      new CustomEvent(Events.BoundBoxChange, {
+        detail: { ...testViewerBox, boxType: BoundBoxes.Viewer },
+      })
+    );
+  };
+
   // Run analysis
-  const computeLatency = () => {
+  const computeLatency = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
     const [analyzer, err] = analyzerBuilder.current.build();
 
     if (err || !analyzer) {
       alert("error building analyzer. see console for details.");
       return;
     }
-    navigate("/report", { state: { analyzer } });
+
+    // Store analyzer in the module-level store so it can be accessed by the report page
+    analyzerStore.set(analyzer);
+    navigate("/report");
   };
 
   return (
@@ -132,6 +180,9 @@ function InputForm() {
         Compute Latency
       </button>
       <div className="test-link-container">
+        <button type="button" onClick={loadTestData} disabled={!firstFrameCanvas}>
+          Load Test Data
+        </button>
         <Link to="/test-video-create">Test Video Creator</Link>
       </div>
     </form>

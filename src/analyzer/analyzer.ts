@@ -12,7 +12,7 @@ export const AnalyzerStates = {
 type State = (typeof AnalyzerStates)[keyof typeof AnalyzerStates];
 
 export default class Analyzer {
-  localState = AnalyzerStates.Running;
+  localState = AnalyzerStates.Initial;
   // the percentage of progress for this analysis.
   // a number between 0 and 1;
   localProgress = 0;
@@ -36,6 +36,8 @@ export default class Analyzer {
   }
 
   async compute(): Promise<LatencyReport> {
+    this.localState = AnalyzerStates.Running;
+
     // extract frame count
     const frameCount = await this.screenRecording.frameCount();
     // loop over every frame in the user's video
