@@ -2,6 +2,7 @@ import type { BoundBox } from "../model/boundBox";
 import type { Frame } from "../model/frame";
 import type { LatencyReport } from "./latency-report";
 import type ScreenRecording from "./screen-recording";
+import Tesseract from "tesseract.js";
 
 export const AnalyzerStates = {
   Initial: 1,
@@ -13,9 +14,11 @@ type State = (typeof AnalyzerStates)[keyof typeof AnalyzerStates];
 
 export default class Analyzer {
   localState = AnalyzerStates.Initial;
-  // the percentage of progress for this analysis.
-  // a number between 0 and 1;
-  localProgress = 0;
+
+  // Three-stage progress tracking
+  private initializingProgress = 0;
+  private croppingProgress = 0;
+  private ocrProgress = 0;
 
   // inputs
   private screenRecording: ScreenRecording;
@@ -38,60 +41,146 @@ export default class Analyzer {
   async compute(): Promise<LatencyReport> {
     this.localState = AnalyzerStates.Running;
 
-    // extract frame count
-    const frameCount = await this.screenRecording.frameCount();
-    // loop over every frame in the user's video
-    let frameIndex = 0;
+    console.log('[Analyzer] Starting compute...');
+    const startTime = performance.now();
 
-    for await (const canvas of this.screenRecording.allFrames()) {
-      // Extract capture clock region
-      const captureCanvas = this.extractRegion(canvas, this.captureBox);
-      const captureClockImageURL = captureCanvas.toDataURL("image/png");
+    // Create a scheduler with multiple workers for parallel processing
+    const scheduler = Tesseract.createScheduler();
+    const numWorkers = 4; // Adjust based on CPU cores
 
-      // Extract viewer clock region
-      const viewerCanvas = this.extractRegion(canvas, this.viewerBox);
-      const viewerClockImageURL = viewerCanvas.toDataURL("image/png");
+    console.log('[Analyzer] Initializing workers...');
+    const initStart = performance.now();
 
-      // TODO: perform OCR on both regions
-      const captureClockOCR = "";
-      const viewerClockOCR = "";
-
-      // TODO: parse timestamps
-      const captureClockParsed = new Date();
-      const viewerClockParsed = new Date();
-
-      // Create Frame object and add to this.frames
-      const frame: Frame = {
-        captureClockImageURL,
-        captureClockOCR,
-        captureClockParsed,
-        viewerClockImageURL,
-        viewerClockOCR,
-        viewerClockParsed,
-      };
-
-      this.frames.push(frame);
-
-      // Update progress
-      frameIndex++;
-      this.localProgress = frameIndex / frameCount;
+    // Initialize workers with progress tracking
+    const workers: Tesseract.Worker[] = [];
+    for (let i = 0; i < numWorkers; i++) {
+      const worker = await Tesseract.createWorker('eng');
+      workers.push(worker);
+      this.initializingProgress = (i + 1) / numWorkers;
     }
 
-    this.localState = AnalyzerStates.Finished;
-    this.localProgress = 1;
+    workers.forEach(worker => scheduler.addWorker(worker));
+    console.log(`[Analyzer] Workers initialized in ${(performance.now() - initStart).toFixed(0)}ms`);
 
-    return {
-      frames: this.frames,
-      error: null,
-    };
+    try {
+      // extract frame count
+      console.log('[Analyzer] Getting frame count...');
+      const frameCount = await this.screenRecording.frameCount();
+      console.log(`[Analyzer] Frame count: ${frameCount}`);
+
+      // Collect all frame data first
+      const frameData: Array<{
+        captureClockImageURL: string;
+        viewerClockImageURL: string;
+        index: number;
+      }> = [];
+
+      console.log('[Analyzer] Starting frame extraction...');
+      const extractStart = performance.now();
+
+      let frameIndex = 0;
+      for await (const canvas of this.screenRecording.allFrames()) {
+        // Extract capture clock region
+        const captureCanvas = this.extractRegion(canvas, this.captureBox);
+        const captureClockImageURL = captureCanvas.toDataURL("image/png");
+
+        // Extract viewer clock region
+        const viewerCanvas = this.extractRegion(canvas, this.viewerBox);
+        const viewerClockImageURL = viewerCanvas.toDataURL("image/png");
+
+        frameData.push({
+          captureClockImageURL,
+          viewerClockImageURL,
+          index: frameIndex,
+        });
+
+        frameIndex++;
+        this.croppingProgress = frameIndex / frameCount;
+      }
+
+      console.log(`[Analyzer] Frame extraction completed in ${(performance.now() - extractStart).toFixed(0)}ms`);
+      console.log('[Analyzer] Starting OCR processing...');
+      const ocrStart = performance.now();
+
+      // Process all frames in parallel using the scheduler
+      let completedFrames = 0;
+      const ocrPromises = frameData.map(async (data) => {
+        // Process both clocks in parallel for this frame
+        const [captureClockResult, viewerClockResult] = await Promise.all([
+          scheduler.addJob('recognize', data.captureClockImageURL),
+          scheduler.addJob('recognize', data.viewerClockImageURL),
+        ]);
+
+        const captureClockOCR = captureClockResult.data.text.trim();
+        const viewerClockOCR = viewerClockResult.data.text.trim();
+
+        // TODO: parse timestamps
+        const captureClockParsed = new Date();
+        const viewerClockParsed = new Date();
+
+        // Update OCR progress (count completed frames)
+        completedFrames++;
+        this.ocrProgress = completedFrames / frameCount;
+
+        return {
+          captureClockImageURL: data.captureClockImageURL,
+          captureClockOCR,
+          captureClockParsed,
+          viewerClockImageURL: data.viewerClockImageURL,
+          viewerClockOCR,
+          viewerClockParsed,
+          index: data.index,
+        };
+      });
+
+      // Wait for all OCR operations to complete
+      const processedFrames = await Promise.all(ocrPromises);
+      console.log(`[Analyzer] OCR processing completed in ${(performance.now() - ocrStart).toFixed(0)}ms`);
+
+      console.log('[Analyzer] Sorting and mapping frames...');
+      const sortStart = performance.now();
+
+      // Sort frames by original index to maintain order
+      processedFrames.sort((a, b) => a.index - b.index);
+
+      // Add frames in order (remove index property)
+      this.frames = processedFrames.map((item) => ({
+        captureClockImageURL: item.captureClockImageURL,
+        captureClockOCR: item.captureClockOCR,
+        captureClockParsed: item.captureClockParsed,
+        viewerClockImageURL: item.viewerClockImageURL,
+        viewerClockOCR: item.viewerClockOCR,
+        viewerClockParsed: item.viewerClockParsed,
+      }));
+
+      console.log(`[Analyzer] Sorting completed in ${(performance.now() - sortStart).toFixed(0)}ms`);
+      console.log(`[Analyzer] Total compute time: ${(performance.now() - startTime).toFixed(0)}ms`);
+
+      this.localState = AnalyzerStates.Finished;
+      this.initializingProgress = 1;
+      this.croppingProgress = 1;
+      this.ocrProgress = 1;
+
+      return {
+        frames: this.frames,
+        error: null,
+      };
+    } finally {
+      // Clean up all workers
+      await scheduler.terminate();
+    }
   }
 
   state(): State {
     return this.localState;
   }
 
-  progress(): number {
-    return this.localProgress;
+  progress(): { initializing: number; cropping: number; ocr: number } {
+    return {
+      initializing: this.initializingProgress,
+      cropping: this.croppingProgress,
+      ocr: this.ocrProgress,
+    };
   }
 
   private extractRegion(canvas: HTMLCanvasElement, box: BoundBox): HTMLCanvasElement {

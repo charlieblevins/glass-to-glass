@@ -10,7 +10,11 @@ function Report() {
   const analyzer = analyzerStore.get();
 
   const [report, setReport] = useState<LatencyReport | null>();
-  const [progress, setProgress] = useState<number>(0);
+  const [progress, setProgress] = useState<{ initializing: number; cropping: number; ocr: number }>({
+    initializing: 0,
+    cropping: 0,
+    ocr: 0,
+  });
 
   const back = () => {
     document.dispatchEvent(new CustomEvent(Events.BackToForm));
@@ -36,7 +40,7 @@ function Report() {
       const report = await analyzer.compute();
 
       clearInterval(progressInterval);
-      setProgress(1);
+      setProgress({ initializing: 1, cropping: 1, ocr: 1 });
       setReport(report);
     }
 
@@ -54,7 +58,9 @@ function Report() {
       {!report ? (
         <div>
           <div>Computing latency analysis&hellip;</div>
-          <div>Progress: {Math.round(progress * 100)}%</div>
+          <div>Initializing OCR: {Math.round(progress.initializing * 100)}%</div>
+          <div>Clock cropping: {Math.round(progress.cropping * 100)}%</div>
+          <div>OCR: {Math.round(progress.ocr * 100)}%</div>
         </div>
       ) : (
         <div>
