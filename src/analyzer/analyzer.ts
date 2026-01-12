@@ -42,12 +42,33 @@ export default class Analyzer {
     let frameIndex = 0;
 
     for await (const canvas of this.screenRecording.allFrames()) {
-      // TODO: process each frame canvas
-      // - extract capture clock region using this.captureBox
-      // - extract viewer clock region using this.viewerBox
-      // - perform OCR on both regions
-      // - parse timestamps
-      // - create Frame object and add to this.frames
+      // Extract capture clock region
+      const captureCanvas = this.extractRegion(canvas, this.captureBox);
+      const captureClockImageURL = captureCanvas.toDataURL("image/png");
+
+      // Extract viewer clock region
+      const viewerCanvas = this.extractRegion(canvas, this.viewerBox);
+      const viewerClockImageURL = viewerCanvas.toDataURL("image/png");
+
+      // TODO: perform OCR on both regions
+      const captureClockOCR = "";
+      const viewerClockOCR = "";
+
+      // TODO: parse timestamps
+      const captureClockParsed = new Date();
+      const viewerClockParsed = new Date();
+
+      // Create Frame object and add to this.frames
+      const frame: Frame = {
+        captureClockImageURL,
+        captureClockOCR,
+        captureClockParsed,
+        viewerClockImageURL,
+        viewerClockOCR,
+        viewerClockParsed,
+      };
+
+      this.frames.push(frame);
 
       // Update progress
       frameIndex++;
@@ -69,5 +90,31 @@ export default class Analyzer {
 
   progress(): number {
     return this.localProgress;
+  }
+
+  private extractRegion(canvas: HTMLCanvasElement, box: BoundBox): HTMLCanvasElement {
+    const regionCanvas = document.createElement("canvas");
+    regionCanvas.width = box.width;
+    regionCanvas.height = box.height;
+
+    const ctx = regionCanvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("Failed to get 2D context for region extraction");
+    }
+
+    // Draw the specified region from the source canvas onto the new canvas
+    ctx.drawImage(
+      canvas,
+      box.x,
+      box.y,
+      box.width,
+      box.height,
+      0,
+      0,
+      box.width,
+      box.height
+    );
+
+    return regionCanvas;
   }
 }
