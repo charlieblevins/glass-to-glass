@@ -54,7 +54,7 @@ export default class ScreenRecording {
     return stats.packetCount;
   }
 
-  async *allFrames(): AsyncGenerator<HTMLCanvasElement, void, unknown> {
+  async *allFrames(): AsyncGenerator<{ canvas: HTMLCanvasElement; timestamp: number }, void, unknown> {
     const input = new Input({
       source: new BlobSource(this.file),
       formats: ALL_FORMATS,
@@ -71,7 +71,10 @@ export default class ScreenRecording {
 
     try {
       for await (const wrappedCanvas of canvasGenerator) {
-        yield wrappedCanvas.canvas as HTMLCanvasElement;
+        yield {
+          canvas: wrappedCanvas.canvas as HTMLCanvasElement,
+          timestamp: wrappedCanvas.timestamp,
+        };
       }
     } finally {
       input.dispose();

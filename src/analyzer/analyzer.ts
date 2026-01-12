@@ -73,13 +73,14 @@ export default class Analyzer {
         captureClockImageURL: string;
         viewerClockImageURL: string;
         index: number;
+        timestamp: number;
       }> = [];
 
       console.log('[Analyzer] Starting frame extraction...');
       const extractStart = performance.now();
 
       let frameIndex = 0;
-      for await (const canvas of this.screenRecording.allFrames()) {
+      for await (const { canvas, timestamp } of this.screenRecording.allFrames()) {
         // Extract capture clock region
         const captureCanvas = this.extractRegion(canvas, this.captureBox);
         const captureClockImageURL = captureCanvas.toDataURL("image/png");
@@ -92,6 +93,7 @@ export default class Analyzer {
           captureClockImageURL,
           viewerClockImageURL,
           index: frameIndex,
+          timestamp,
         });
 
         frameIndex++;
@@ -114,9 +116,9 @@ export default class Analyzer {
         const captureClockOCR = captureClockResult.data.text.trim();
         const viewerClockOCR = viewerClockResult.data.text.trim();
 
-        // TODO: parse timestamps
-        const captureClockParsed = new Date();
-        const viewerClockParsed = new Date();
+        // Parse timestamps from OCR text
+        const captureClockParsed = this.parseTimestamp(captureClockOCR);
+        const viewerClockParsed = this.parseTimestamp(viewerClockOCR);
 
         // Update OCR progress (count completed frames)
         completedFrames++;
@@ -130,6 +132,7 @@ export default class Analyzer {
           viewerClockOCR,
           viewerClockParsed,
           index: data.index,
+          timestamp: data.timestamp,
         };
       });
 
@@ -143,8 +146,13 @@ export default class Analyzer {
       // Sort frames by original index to maintain order
       processedFrames.sort((a, b) => a.index - b.index);
 
+      // Interpolate milliseconds for capture and viewer clocks
+      this.interpolateMilliseconds(processedFrames, 'captureClockParsed');
+      this.interpolateMilliseconds(processedFrames, 'viewerClockParsed');
+
       // Add frames in order (remove index property)
       this.frames = processedFrames.map((item) => ({
+        screenRecordingOffsetSeconds: item.timestamp,
         captureClockImageURL: item.captureClockImageURL,
         captureClockOCR: item.captureClockOCR,
         captureClockParsed: item.captureClockParsed,
@@ -207,5 +215,102 @@ export default class Analyzer {
     );
 
     return regionCanvas;
+  }
+
+  private parseTimestamp(ocrText: string): Date {
+    // Clean up OCR text - remove common OCR artifacts
+    const cleaned = ocrText
+      .trim()
+      .replace(/[|]/g, ':') // Common OCR mistake: | instead of :
+      .replace(/[O]/g, '0') // Common OCR mistake: O instead of 0
+      .replace(/[lI]/g, '1') // Common OCR mistake: l or I instead of 1
+      .replace(/\s+/g, ' '); // Normalize whitespace
+
+    // Try various timestamp formats
+    // Format 1: "HH:MM:SS.mmm" or "HH:MM:SS" (24-hour time)
+    const time24Match = cleaned.match(/(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?/);
+    if (time24Match) {
+      const [, hours, minutes, seconds, milliseconds = '0'] = time24Match;
+      const date = new Date();
+      date.setHours(parseInt(hours, 10));
+      date.setMinutes(parseInt(minutes, 10));
+      date.setSeconds(parseInt(seconds, 10));
+      date.setMilliseconds(parseInt(milliseconds.padEnd(3, '0'), 10));
+      return date;
+    }
+
+    // Format 2: "HH:MM:SS AM/PM" (12-hour time)
+    const time12Match = cleaned.match(/(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?\s*(AM|PM)/i);
+    if (time12Match) {
+      const [, hours, minutes, seconds, milliseconds = '0', period] = time12Match;
+      let hrs = parseInt(hours, 10);
+      if (period.toUpperCase() === 'PM' && hrs !== 12) {
+        hrs += 12;
+      } else if (period.toUpperCase() === 'AM' && hrs === 12) {
+        hrs = 0;
+      }
+      const date = new Date();
+      date.setHours(hrs);
+      date.setMinutes(parseInt(minutes, 10));
+      date.setSeconds(parseInt(seconds, 10));
+      date.setMilliseconds(parseInt(milliseconds.padEnd(3, '0'), 10));
+      return date;
+    }
+
+    // Format 3: ISO format or other standard formats
+    const isoDate = new Date(cleaned);
+    if (!isNaN(isoDate.getTime())) {
+      return isoDate;
+    }
+
+    // If all parsing fails, return an invalid date
+    console.warn(`Failed to parse timestamp: "${ocrText}" (cleaned: "${cleaned}")`);
+    return new Date(NaN);
+  }
+
+  private interpolateMilliseconds(
+    frames: Array<{
+      timestamp: number;
+      captureClockParsed: Date;
+      viewerClockParsed: Date;
+      captureClockImageURL: string;
+      captureClockOCR: string;
+      viewerClockImageURL: string;
+      viewerClockOCR: string;
+      index: number;
+    }>,
+    dateField: 'captureClockParsed' | 'viewerClockParsed'
+  ): void {
+    let baselineOffsetSeconds: number | null = null;
+    let lastValidSeconds: number | null = null;
+
+    for (let i = 0; i < frames.length; i++) {
+      const frame = frames[i];
+      const currentDate = frame[dateField];
+
+      // Skip invalid dates
+      if (isNaN(currentDate.getTime())) {
+        continue;
+      }
+
+      const currentSeconds = currentDate.getHours() * 3600 + currentDate.getMinutes() * 60 + currentDate.getSeconds();
+
+      // Check if the second value has increased
+      if (lastValidSeconds !== null && currentSeconds > lastValidSeconds) {
+        // Second has changed - set this as the new baseline
+        baselineOffsetSeconds = frame.timestamp;
+        currentDate.setMilliseconds(0);
+        lastValidSeconds = currentSeconds;
+      } else if (baselineOffsetSeconds !== null && currentSeconds === lastValidSeconds) {
+        // We have a baseline and the second hasn't changed - interpolate milliseconds
+        const offsetDiff = frame.timestamp - baselineOffsetSeconds;
+        const milliseconds = Math.round((offsetDiff % 1) * 1000);
+        currentDate.setMilliseconds(milliseconds);
+      } else {
+        // No baseline yet - mark for skipping by setting to invalid
+        frame[dateField] = new Date(NaN);
+        lastValidSeconds = currentSeconds;
+      }
+    }
   }
 }

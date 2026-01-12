@@ -1,4 +1,5 @@
 export interface Frame {
+  screenRecordingOffsetSeconds: number;
   captureClockImageURL: string;
   captureClockOCR: string;
   captureClockParsed: Date;
