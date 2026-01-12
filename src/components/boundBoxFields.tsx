@@ -4,11 +4,9 @@ import { dispatch } from "../event";
 import type { BoundBox } from "../model/boundBox";
 
 function BoundBoxFields({
-  title,
   prefix,
   existingBox,
 }: {
-  title: string;
   prefix: string;
   existingBox: BoundBox | undefined;
 }) {
@@ -43,7 +41,6 @@ function BoundBoxFields({
 
   return (
     <fieldset id="bound-box-fields">
-      <legend>{title}</legend>
       <div id="bound-box-fields-inner">
         <div className="single-field">
           <label htmlFor={xName}>X:</label>

@@ -17,7 +17,10 @@ export default class AnalyzerBuilder {
     if (!this.viewerBox) {
       return [null, new Error("missing viewer clock box")];
     }
-    return [new Analyzer(), null];
+    return [
+      new Analyzer(this.screenRecording, this.captureBox, this.viewerBox),
+      null,
+    ];
   }
 
   addScreenRecording(sr: ScreenRecording) {

@@ -6,16 +6,17 @@ import AnalyzerBuilder from "./analyzer/builder";
 import FormError from "./components/formError";
 import { FormErrors, type FormErrorEnum } from "./model/formErrors";
 import ScreenRecording from "./analyzer/screen-recording";
-import { BoundBoxes } from "./model/boundBox";
+import { BoundBoxes, type BoundBox } from "./model/boundBox";
 
 function InputForm() {
-  const builder = useRef<AnalyzerBuilder>(new AnalyzerBuilder());
+  const analyzerBuilder = useRef<AnalyzerBuilder>(new AnalyzerBuilder());
   const navigate = useNavigate();
 
   const [firstFrameCanvas, setFirstFrameCanvas] = useState<HTMLCanvasElement>();
-  // const [videoAdded, setVideoAdded] = useState(false);
 
   const [formError, setFormError] = useState<FormErrorEnum | null>();
+  const [captureBox, setCaptureBox] = useState<BoundBox | null>(null);
+  const [viewerBox, setViewerBox] = useState<BoundBox | null>(null);
 
   // file added
   const onVideoInputChange = async (e: ChangeEvent) => {
@@ -38,7 +39,7 @@ function InputForm() {
       return;
     }
 
-    builder.current.addScreenRecording(sr);
+    analyzerBuilder.current.addScreenRecording(sr);
 
     setFirstFrameCanvas(canvas);
   };
@@ -48,9 +49,11 @@ function InputForm() {
       const payload = (e as CustomEvent).detail as BoundBoxChangePayload;
 
       if (payload.boxType === BoundBoxes.Capture) {
-        builder.current.setCaptureBox(payload);
+        analyzerBuilder.current.setCaptureBox(payload);
+        setCaptureBox(payload);
       } else {
-        builder.current.setViewerBox(payload);
+        analyzerBuilder.current.setViewerBox(payload);
+        setViewerBox(payload);
       }
     };
     document.addEventListener(Events.BoundBoxChange, onBoundBoxChange);
@@ -61,14 +64,13 @@ function InputForm() {
 
   // Run analysis
   const computeLatency = () => {
-    const [analyzer, err] = builder.current.build();
+    const [analyzer, err] = analyzerBuilder.current.build();
 
     if (err || !analyzer) {
-      // TODO: handle error
+      alert("error building analyzer. see console for details.");
       return;
     }
-    // TODO: do something with analyzer
-    navigate("/report");
+    navigate("/report", { state: { analyzer } });
   };
 
   return (
@@ -86,23 +88,47 @@ function InputForm() {
             <div className="label">Capture Clock Position</div>
             <BoundBoxEditor
               canvas={firstFrameCanvas}
-              builder={builder}
+              builder={analyzerBuilder}
               boxType={BoundBoxes.Capture}
             />
+            <div>
+              {captureBox ? (
+                <span>
+                  x: {captureBox.x}, y: {captureBox.y}, width:{" "}
+                  {captureBox.width}, height: {captureBox.height}
+                </span>
+              ) : (
+                <span>Not set</span>
+              )}
+            </div>
           </div>
           <div id="reference-clock-box-input" className="input-group">
             <div className="label">Viewer Clock Position</div>
             <BoundBoxEditor
               canvas={firstFrameCanvas}
-              builder={builder}
+              builder={analyzerBuilder}
               boxType={BoundBoxes.Viewer}
             />
+            <div>
+              {viewerBox ? (
+                <span>
+                  x: {viewerBox.x}, y: {viewerBox.y}, width: {viewerBox.width},
+                  height: {viewerBox.height}
+                </span>
+              ) : (
+                <span>Not set</span>
+              )}
+            </div>
           </div>
         </div>
       ) : (
         <div>Please add a file first</div>
       )}
-      <button type="submit" onClick={computeLatency} disabled={true}>
+      <button
+        type="submit"
+        onClick={computeLatency}
+        disabled={Boolean(!viewerBox || !captureBox)}
+      >
         Compute Latency
       </button>
       <div className="test-link-container">

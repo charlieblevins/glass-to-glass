@@ -86,13 +86,10 @@ function BoundBoxEditor({ canvas, builder, boxType }: BoundBoxEditorProps) {
         <Dialog.Backdrop className="dialog-backdrop" />
         <Dialog.Popup className="dialog-popup">
           <Dialog.Title className="dialog-title">
-            Set clock position
+            {boxType === BoundBoxes.Capture ? "Capture" : "Viewer"} clock
+            position
           </Dialog.Title>
-          <BoundBoxFields
-            title="Display Clock Position (px)"
-            prefix="cpp"
-            existingBox={translatedProps}
-          />
+          <BoundBoxFields prefix="cpp" existingBox={translatedProps} />
           <Stage
             className="test"
             scale={{
@@ -115,10 +112,10 @@ function BoundBoxEditor({ canvas, builder, boxType }: BoundBoxEditorProps) {
                 draggable
                 onDragEnd={(e) => {
                   const newProps: BoundBoxChangePayload = {
-                    x: e.target.x(),
-                    y: e.target.y(),
-                    width: e.target.width(),
-                    height: e.target.height(),
+                    x: Math.round(e.target.x()),
+                    y: Math.round(e.target.y()),
+                    width: Math.round(e.target.width()),
+                    height: Math.round(e.target.height()),
                     boxType,
                   };
                   setLocalProps(newProps);
@@ -142,11 +139,11 @@ function BoundBoxEditor({ canvas, builder, boxType }: BoundBoxEditorProps) {
                   node.scaleY(1);
 
                   const newProps: BoundBoxChangePayload = {
-                    x: node.x(),
-                    y: node.y(),
+                    x: Math.round(node.x()),
+                    y: Math.round(node.y()),
                     // Ensure dimensions aren't negative or too small
-                    width: Math.max(5, node.width() * scaleX),
-                    height: Math.max(5, node.height() * scaleY),
+                    width: Math.round(Math.max(5, node.width() * scaleX)),
+                    height: Math.round(Math.max(5, node.height() * scaleY)),
                     boxType,
                   };
                   setLocalProps(newProps);

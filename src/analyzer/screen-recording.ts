@@ -35,4 +35,46 @@ export default class ScreenRecording {
     // TODO: when is offscfeen canvas true?
     return [canvas as HTMLCanvasElement, null];
   }
+
+  async frameCount(): Promise<number> {
+    const input = new Input({
+      source: new BlobSource(this.file),
+      formats: ALL_FORMATS,
+    });
+
+    const track = await input.getPrimaryVideoTrack();
+    if (!track) {
+      input.dispose();
+      throw new Error("no video track");
+    }
+
+    const stats = await track.computePacketStats();
+    input.dispose();
+
+    return stats.packetCount;
+  }
+
+  async *allFrames(): AsyncGenerator<HTMLCanvasElement, void, unknown> {
+    const input = new Input({
+      source: new BlobSource(this.file),
+      formats: ALL_FORMATS,
+    });
+
+    const track = await input.getPrimaryVideoTrack();
+    if (!track) {
+      input.dispose();
+      throw new Error("no video track");
+    }
+
+    const canvasSink = new CanvasSink(track);
+    const canvasGenerator = canvasSink.canvases();
+
+    try {
+      for await (const wrappedCanvas of canvasGenerator) {
+        yield wrappedCanvas.canvas as HTMLCanvasElement;
+      }
+    } finally {
+      input.dispose();
+    }
+  }
 }
