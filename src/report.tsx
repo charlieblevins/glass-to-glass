@@ -90,11 +90,23 @@ function Report() {
                   })
                   .filter((latency): latency is number => latency !== null);
 
-                const avgLatency =
-                  latencies.length > 0
-                    ? latencies.reduce((sum, lat) => sum + lat, 0) /
-                      latencies.length
-                    : null;
+                const avgLatency = (() => {
+                  if (latencies.length === 0) return null;
+
+                  // Sort latencies to remove outliers
+                  const sorted = [...latencies].sort((a, b) => a - b);
+
+                  // Remove top and bottom 1%
+                  const trimAmount = Math.floor(sorted.length * 0.05);
+                  const trimmed = sorted.slice(trimAmount, sorted.length - trimAmount);
+
+                  // If we trimmed everything, fall back to original
+                  if (trimmed.length === 0) {
+                    return latencies.reduce((sum, lat) => sum + lat, 0) / latencies.length;
+                  }
+
+                  return trimmed.reduce((sum, lat) => sum + lat, 0) / trimmed.length;
+                })();
 
                 return avgLatency !== null ? (
                   <div

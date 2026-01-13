@@ -72,17 +72,17 @@ function InputForm() {
 
     // Predefined test bounding boxes (adjust these values for your test video)
     const testCaptureBox: BoundBox = {
-      x: 468,
-      y: 148,
-      width: 267,
-      height: 100,
+      x: 870,
+      y: 99,
+      width: 502,
+      height: 139,
     };
 
     const testViewerBox: BoundBox = {
-      x: 66,
-      y: 146,
-      width: 277,
-      height: 100,
+      x: 64,
+      y: 102,
+      width: 511,
+      height: 134,
     };
 
     // Set the boxes in the builder and state
@@ -180,7 +180,11 @@ function InputForm() {
         Compute Latency
       </button>
       <div className="test-link-container">
-        <button type="button" onClick={loadTestData} disabled={!firstFrameCanvas}>
+        <button
+          type="button"
+          onClick={loadTestData}
+          disabled={!firstFrameCanvas}
+        >
           Load Test Data
         </button>
         <Link to="/test-video-create">Test Video Creator</Link>
