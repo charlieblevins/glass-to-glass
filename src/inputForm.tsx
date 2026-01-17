@@ -187,7 +187,9 @@ function InputForm() {
         >
           Load Test Data
         </button>
-        <Link to="/test-video-create">Test Video Creator</Link>
+        {import.meta.env.VITE_ENABLE_TEST_VIDEO_CREATOR === "true" && (
+          <Link to="/test-video-create">Test Video Creator</Link>
+        )}
       </div>
     </form>
   );

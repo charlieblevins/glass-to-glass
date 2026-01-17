@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:production": "tsc -b && vite build --mode production",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "npm run build && aws s3 sync dist/ s3://glass-to-glass --delete"
+    "deploy": "node scripts/deploy.js"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
