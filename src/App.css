@@ -26,15 +26,12 @@ header {
   display: flex;
   width: 100%;
   flex-direction: row;
-  ;
   align-items: center;
-  ;
   justify-content: left;
 }
 
 .logo {
   width: 6em;
-  padding: 1.5em;
   will-change: filter;
   transition: filter 300ms;
 }
@@ -79,20 +76,24 @@ label {
 .input-group {
   display: flex;
   border: 3px solid #ced4da;
-  /* Add the desired border */
   border-radius: 0.25rem;
-  /* Optional: adds rounded corners */
-  /* Ensures the border surrounds the content neatly */
-  width: fit-content;
+  width: 22rem;
   padding: 2rem;
-  margin: 1rem;
+  margin: 1rem 0;
   flex-direction: column;
   align-items: left;
   justify-content: left;
 }
 
-.input-group.disabled {
-  border-color: gray;
+.input-group.filled {
+  border-color: green;
+  border-width: 4px;
+}
+
+.filled-indicator {
+  color: green;
+  font-weight: bold;
+  font-size: 1.2em;
 }
 
 input[type="file"]::file-selector-button {
@@ -232,4 +233,38 @@ dialog {
 
 .dialog-close:hover {
   background-color: #0056b3;
+}
+
+.form-error {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 2px solid #ef4444;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.form-error h2 {
+  color: #ff6b6b;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2em;
+}
+
+.form-error p {
+  color: #ff8787;
+  margin: 0;
+}
+
+@media (prefers-color-scheme: light) {
+  .form-error {
+    background-color: rgba(220, 38, 38, 0.05);
+    border-color: #dc2626;
+  }
+
+  .form-error h2 {
+    color: #c92a2a;
+  }
+
+  .form-error p {
+    color: #dc2626;
+  }
 }

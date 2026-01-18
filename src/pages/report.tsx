@@ -1,9 +1,9 @@
-import { Events } from "./model/events";
+import { Events } from "../model/events";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { AnalyzerStates } from "./analyzer/analyzer";
-import type { LatencyReport } from "./analyzer/latency-report";
-import { analyzerStore } from "./analyzer/analyzerStore";
+import { AnalyzerStates } from "../analyzer/analyzer";
+import type { LatencyReport } from "../analyzer/latency-report";
+import { analyzerStore } from "../analyzer/analyzerStore";
 
 function Report() {
   const navigate = useNavigate();

@@ -1,17 +1,19 @@
-import { Events, type BoundBoxChangePayload } from "./model/events";
+import { Events, type BoundBoxChangePayload } from "../model/events";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import BoundBoxEditor from "./components/boundBoxEditor";
-import AnalyzerBuilder from "./analyzer/builder";
-import FormError from "./components/formError";
-import { FormErrors, type FormErrorEnum } from "./model/formErrors";
-import ScreenRecording from "./analyzer/screen-recording";
-import { BoundBoxes, type BoundBox } from "./model/boundBox";
-import { analyzerStore } from "./analyzer/analyzerStore";
+import BoundBoxEditor from "../components/boundBoxEditor";
+import AnalyzerBuilder from "../analyzer/builder";
+import FormError from "../components/formError";
+import { FormErrors, type FormErrorEnum } from "../model/formErrors";
+import ScreenRecording from "../analyzer/screen-recording";
+import { BoundBoxes, type BoundBox } from "../model/boundBox";
+import { analyzerStore } from "../analyzer/analyzerStore";
+import classNames from "classnames";
 
 function InputForm() {
   const analyzerBuilder = useRef<AnalyzerBuilder>(new AnalyzerBuilder());
   const navigate = useNavigate();
+  const formErrorRef = useRef<HTMLDivElement>(null);
 
   const [firstFrameCanvas, setFirstFrameCanvas] = useState<HTMLCanvasElement>();
 
@@ -63,10 +65,22 @@ function InputForm() {
     };
   }, []);
 
+  // Since formErrorRef is only rendered after
+  // formError is set, do the scrolling when
+  // it will actually work.
+  useEffect(() => {
+    if (formError) {
+      formErrorRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [formError]);
+
   // Load test data with predefined bounding boxes
   const loadTestData = () => {
     if (!firstFrameCanvas) {
-      alert("Please load a video file first");
+      alert("Please add a screen recording.");
       return;
     }
 
@@ -109,6 +123,21 @@ function InputForm() {
   const computeLatency = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
+    if (!firstFrameCanvas) {
+      setFormError(FormErrors.NoScreenRecording);
+      return;
+    }
+
+    if (!captureBox) {
+      alert("Please set the capture clock position");
+      return;
+    }
+
+    if (!viewerBox) {
+      alert("Please set the viewer clock position");
+      return;
+    }
+
     const [analyzer, err] = analyzerBuilder.current.build();
 
     if (err || !analyzer) {
@@ -123,70 +152,79 @@ function InputForm() {
 
   return (
     <form id="input-form">
-      {formError ? <FormError errorEnum={formError} /> : null}
-      <div id="video-input" className="input-group">
-        <label className="required-label">Screen Recording</label>
+      {formError ? (
+        <div ref={formErrorRef}>
+          <FormError errorEnum={formError} />
+        </div>
+      ) : null}
+      <div
+        id="video-input"
+        className={classNames({
+          "input-group": true,
+          filled: firstFrameCanvas,
+        })}
+      >
+        <label className="required-label">
+          Screen Recording
+          {firstFrameCanvas && <span className="filled-indicator"> ✓</span>}
+        </label>
         <div>
           <input onChange={onVideoInputChange} type="file" required />
         </div>
       </div>
-      {firstFrameCanvas ? (
-        <div>
-          <div id="capture-clock-box-input" className="input-group">
-            <div className="label">Capture Clock Position</div>
+      <div>
+        <div id="capture-clock-box-input" className="input-group">
+          <div className="label">Capture Clock Position</div>
+          {firstFrameCanvas ? (
             <BoundBoxEditor
               canvas={firstFrameCanvas}
               builder={analyzerBuilder}
               boxType={BoundBoxes.Capture}
             />
-            <div>
-              {captureBox ? (
-                <span>
-                  x: {captureBox.x}, y: {captureBox.y}, width:{" "}
-                  {captureBox.width}, height: {captureBox.height}
-                </span>
-              ) : (
-                <span>Not set</span>
-              )}
+          ) : (
+            <div className="detail-text">
+              Please add a screen recording first
             </div>
+          )}
+          <div>
+            {captureBox ? (
+              <span>
+                x: {captureBox.x}, y: {captureBox.y}, width: {captureBox.width},
+                height: {captureBox.height}
+              </span>
+            ) : null}
           </div>
-          <div id="reference-clock-box-input" className="input-group">
-            <div className="label">Viewer Clock Position</div>
+        </div>
+        <div id="reference-clock-box-input" className="input-group">
+          <div className="label">Viewer Clock Position</div>
+          {firstFrameCanvas ? (
             <BoundBoxEditor
               canvas={firstFrameCanvas}
               builder={analyzerBuilder}
               boxType={BoundBoxes.Viewer}
             />
-            <div>
-              {viewerBox ? (
-                <span>
-                  x: {viewerBox.x}, y: {viewerBox.y}, width: {viewerBox.width},
-                  height: {viewerBox.height}
-                </span>
-              ) : (
-                <span>Not set</span>
-              )}
-            </div>
+          ) : (
+            <div>Please add a screen recording first</div>
+          )}
+          <div>
+            {viewerBox ? (
+              <span>
+                x: {viewerBox.x}, y: {viewerBox.y}, width: {viewerBox.width},
+                height: {viewerBox.height}
+              </span>
+            ) : null}
           </div>
         </div>
-      ) : (
-        <div>Please add a file first</div>
-      )}
-      <button
-        type="submit"
-        onClick={computeLatency}
-        disabled={Boolean(!viewerBox || !captureBox)}
-      >
+      </div>
+      <button type="submit" onClick={computeLatency}>
         Compute Latency
       </button>
       <div className="test-link-container">
-        <button
-          type="button"
-          onClick={loadTestData}
-          disabled={!firstFrameCanvas}
-        >
-          Load Test Data
-        </button>
+        {import.meta.env.VITE_ENABLE_TEST_FORM_DATA === "true" && (
+          <button type="button" onClick={loadTestData}>
+            Load Test Data
+          </button>
+        )}
         {import.meta.env.VITE_ENABLE_TEST_VIDEO_CREATOR === "true" && (
           <Link to="/test-video-create">Test Video Creator</Link>
         )}
