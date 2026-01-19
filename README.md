@@ -24,9 +24,9 @@ This project was created with the vite `react-ts` template as [described here](h
 
 ## TODO
 
-[ ] reject or shorten files longer than 15 seconds
-[ ] hide frame data table under disclosure triangle
-[ ] show graph of frame latency over time
-[ ] show pie chart of % skipped
-[ ] show pie chart of skipped reason
-[ ] prevent "6" being read as "0"
+- [ ] reject or shorten files longer than 15 seconds
+- [ ] hide frame data table under disclosure triangle
+- [ ] show graph of frame latency over time
+- [ ] show pie chart of % skipped
+- [ ] show pie chart of skipped reason
+- [ ] prevent "6" being read as "0"
