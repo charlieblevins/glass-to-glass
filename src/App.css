@@ -23,11 +23,12 @@ body {
 }
 
 header {
-  display: flex;
-  width: 100%;
-  flex-direction: row;
   align-items: center;
+  column-gap: 2rem;
+  display: flex;
+  flex-direction: row;
   justify-content: left;
+  width: 100%;
 }
 
 .logo {
@@ -58,6 +59,17 @@ header {
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
   }
+}
+
+#headline-text {
+  font-weight: bold;
+}
+
+/* End Header */
+
+form {
+  display: flex;
+  flex-direction: column;
 }
 
 .required-label::after {
@@ -241,6 +253,7 @@ dialog {
   border-radius: 0.5rem;
   padding: 1rem;
   margin: 1rem 0;
+  width: 22rem;
 }
 
 .form-error h2 {
@@ -252,6 +265,10 @@ dialog {
 .form-error p {
   color: #ff8787;
   margin: 0;
+}
+
+.detail-text {
+  color: gray;
 }
 
 @media (prefers-color-scheme: light) {

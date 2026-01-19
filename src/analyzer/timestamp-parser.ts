@@ -102,7 +102,7 @@ export default class TimestampParser {
       ) {
         // We have a baseline and the second hasn't changed - interpolate milliseconds
         const offsetDiff = frame.timestamp - baselineOffsetSeconds;
-        const milliseconds = Math.round((offsetDiff % 1) * 1000);
+        const milliseconds = Math.round(offsetDiff * 1000);
         currentDate.setMilliseconds(milliseconds);
       } else {
         // No baseline yet - mark for skipping by setting to invalid

@@ -1,5 +1,4 @@
-import { Events } from "../model/events";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AnalyzerStates } from "../analyzer/analyzer";
 import type { LatencyReport } from "../analyzer/latency-report";
@@ -19,10 +18,6 @@ function Report() {
     cropping: 0,
     ocr: 0,
   });
-
-  const back = () => {
-    document.dispatchEvent(new CustomEvent(Events.BackToForm));
-  };
 
   useEffect(() => {
     async function run() {
@@ -57,7 +52,7 @@ function Report() {
 
   return (
     <div>
-      <button onClick={back}>back</button>
+      <Link to="/">Start Over</Link>
       <h1>Report</h1>
       {!report ? (
         <div>
@@ -98,14 +93,22 @@ function Report() {
 
                   // Remove top and bottom 1%
                   const trimAmount = Math.floor(sorted.length * 0.05);
-                  const trimmed = sorted.slice(trimAmount, sorted.length - trimAmount);
+                  const trimmed = sorted.slice(
+                    trimAmount,
+                    sorted.length - trimAmount
+                  );
 
                   // If we trimmed everything, fall back to original
                   if (trimmed.length === 0) {
-                    return latencies.reduce((sum, lat) => sum + lat, 0) / latencies.length;
+                    return (
+                      latencies.reduce((sum, lat) => sum + lat, 0) /
+                      latencies.length
+                    );
                   }
 
-                  return trimmed.reduce((sum, lat) => sum + lat, 0) / trimmed.length;
+                  return (
+                    trimmed.reduce((sum, lat) => sum + lat, 0) / trimmed.length
+                  );
                 })();
 
                 return avgLatency !== null ? (

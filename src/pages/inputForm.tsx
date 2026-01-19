@@ -173,8 +173,14 @@ function InputForm() {
         </div>
       </div>
       <div>
-        <div id="capture-clock-box-input" className="input-group">
-          <div className="label">Capture Clock Position</div>
+        <div
+          id="capture-clock-box-input"
+          className={classNames({
+            "input-group": true,
+            filled: captureBox,
+          })}
+        >
+          <div className="required-label">Capture Clock Position</div>
           {firstFrameCanvas ? (
             <BoundBoxEditor
               canvas={firstFrameCanvas}
@@ -195,8 +201,14 @@ function InputForm() {
             ) : null}
           </div>
         </div>
-        <div id="reference-clock-box-input" className="input-group">
-          <div className="label">Viewer Clock Position</div>
+        <div
+          id="reference-clock-box-input"
+          className={classNames({
+            "input-group": true,
+            filled: viewerBox,
+          })}
+        >
+          <div className="required-label">Viewer Clock Position</div>
           {firstFrameCanvas ? (
             <BoundBoxEditor
               canvas={firstFrameCanvas}
@@ -204,7 +216,9 @@ function InputForm() {
               boxType={BoundBoxes.Viewer}
             />
           ) : (
-            <div>Please add a screen recording first</div>
+            <div className="detail-text">
+              Please add a screen recording first
+            </div>
           )}
           <div>
             {viewerBox ? (

@@ -1,9 +1,10 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
 import Logo from "./components/logo.tsx";
 
 // Pages
 import InputForm from "./pages/inputForm.tsx";
 import Report from "./pages/report.tsx";
+import FAQ from "./pages/faq.tsx";
 import TestVideoCreator from "./pages/testVideoCreator.tsx";
 
 // CSS
@@ -15,10 +16,12 @@ function App() {
       <header>
         <Logo />
         <div id="headline-text">Glass to Glass</div>
+        <Link to="/faq">F.A.Q.</Link>
       </header>
       <Routes>
         <Route path="/" element={<InputForm />} />
         <Route path="/report" element={<Report />} />
+        <Route path="/faq" element={<FAQ />} />
         <Route path="/test-video-create" element={<TestVideoCreator />} />
       </Routes>
     </>
